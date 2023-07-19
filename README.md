@@ -12,47 +12,35 @@ The Total Number of Tokens in Circulation
 **Getting Started
 Executing program**
 To run this program, you can use Remix, an online Solidity IDE. 
-//SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-pragma solidity ^0.8.9;
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "hardhat/console.sol";
-
-
-
-contract Token {
-    
-    string public name = "My Hardhat Token";
-    string public symbol = "MHT";
-    uint256 public totalSupply = 1000000;
-    address public owner;
-    mapping(address => uint256) balances;
-
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-
-    constructor() {
-        
-        balances[msg.sender] = totalSupply;
-        owner = msg.sender;
-    }
-    function transfer(address to, uint256 amount) external {
-       
-        require(balances[msg.sender] >= amount, "Not enough tokens");
-
-        console.log(
-            "Transferring from %s to %s %s tokens",
-            msg.sender,
-            to,
-            amount
-        );
-        balances[msg.sender] -= amount;
-        balances[to] += amount;
-
-        emit Transfer(msg.sender, to, amount);
+contract MyToken is ERC20, Ownable {
+    constructor() ERC20("MyToken", "MTK") {
+        _mint(msg.sender, 1000000 * 10**decimals());
     }
 
-    function balanceOf(address account) external view returns (uint256) {
-        return balances[account];
+    function mint(address account, uint256 amount) public onlyOwner {
+        _mint(account, amount);
+    }
+
+    function transfer(address recipient, uint256 amount) public override returns (bool) {
+        _transfer(_msgSender(), recipient, amount);
+        return true;
+    }
+
+    function burn(uint256 amount) public {
+        _burn(_msgSender(), amount);
+    }
+
+    function burnFrom(address account, uint256 amount) public {
+        uint256 currentAllowance = allowance(account, _msgSender());
+        require(currentAllowance >= amount, "ERC20: burn amount exceeds allowance");
+        _approve(account, _msgSender(), currentAllowance - amount);
+        _burn(account, amount);
     }
 }
 **Author**
